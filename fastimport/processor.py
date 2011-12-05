@@ -67,7 +67,7 @@ class ImportProcessor(object):
         self.pre_process()
         for cmd in command_iter():
             try:
-                handler = self.__class__.__dict__[cmd.name + "_handler"]
+                handler = self.__class__.__dict__[cmd.name.decode('ascii') + "_handler"]
             except KeyError:
                 raise errors.MissingHandler(cmd.name)
             else:
@@ -150,7 +150,7 @@ class CommitHandler(object):
         self.pre_process_files()
         for fc in self.command.iter_files():
             try:
-                handler = self.__class__.__dict__[fc.name[4:] + "_handler"]
+                handler = self.__class__.__dict__[fc.name[4:].decode('ascii') + "_handler"]
             except KeyError:
                 raise errors.MissingHandler(fc.name)
             else:

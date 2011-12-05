@@ -29,10 +29,10 @@ GIT_FAST_IMPORT_NEEDS_EXTRA_SPACE_AFTER_QUOTE = False
 
 
 # Lists of command names
-COMMAND_NAMES = ['blob', 'checkpoint', 'commit', 'feature', 'progress',
-    'reset', 'tag']
-FILE_COMMAND_NAMES = ['filemodify', 'filedelete', 'filecopy', 'filerename',
-    'filedeleteall']
+COMMAND_NAMES = [b'blob', b'checkpoint', b'commit', b'feature', b'progress',
+    b'reset', b'tag']
+FILE_COMMAND_NAMES = [b'filemodify', b'filedelete', b'filecopy', b'filerename',
+    b'filedeleteall']
 
 # Feature names
 MULTIPLE_AUTHORS_FEATURE = "multiple-authors"
@@ -86,7 +86,7 @@ class ImportCommand(object):
 class BlobCommand(ImportCommand):
 
     def __init__(self, mark, data, lineno=0):
-        ImportCommand.__init__(self, 'blob')
+        ImportCommand.__init__(self, b'blob')
         self.mark = mark
         self.data = data
         self.lineno = lineno
@@ -111,7 +111,7 @@ class BlobCommand(ImportCommand):
 class CheckpointCommand(ImportCommand):
 
     def __init__(self):
-        ImportCommand.__init__(self, 'checkpoint')
+        ImportCommand.__init__(self, b'checkpoint')
 
     def __bytes__(self):
         return b"checkpoint"
@@ -121,7 +121,7 @@ class CommitCommand(ImportCommand):
 
     def __init__(self, ref, mark, author, committer, message, from_,
         merges, file_iter, lineno=0, more_authors=None, properties=None):
-        ImportCommand.__init__(self, 'commit')
+        ImportCommand.__init__(self, b'commit')
         self.ref = ref
         self.mark = mark
         self.author = author
@@ -150,47 +150,45 @@ class CommitCommand(ImportCommand):
         if self.mark is None:
             mark_line = b""
         else:
-            mark_line = b"mark :" + self.mark + b"\n"
+            mark_line = b"\nmark :" + self.mark
         if self.author is None:
-            author_section = b""
+            author_section = []
         else:
-            author_section = b"author " + format_who_when(self.author) + b"\n"
+            author_section = [b"\nauthor " + format_who_when(self.author)]
             if use_features and self.more_authors:
                 for author in self.more_authors:
-                    author_section += b"author " + format_who_when(author) + b"\n"
-        committer = b"committer " + format_who_when(self.committer) + b"\n"
+                    author_section.append(b"\nauthor " + format_who_when(author))
+        author_section.append(b"\ncommitter " + format_who_when(self.committer))
         if self.message is None:
-            msg_section = b""
+            msg_section = []
         else:
             msg = self.message
-            msg_section = ("data %d\n" % len(msg)).encode('ascii') + msg + b"\n"
+            msg_section = [("\ndata %d\n" % len(msg)).encode('ascii'), msg]
         if self.from_ is None:
             from_line = b""
         else:
-            from_line = b"from " + self.from_ + b"\n"
+            from_line = b"\nfrom " + self.from_
         if self.merges is None:
-            merge_lines = b""
+            merge_lines = []
         else:
-            merge_lines = b"".join([(b"merge " + m + b"\n") for m in self.merges])
+            merge_lines = [(b"\nmerge " + m) for m in self.merges]
         if use_features and self.properties:
             property_lines = []
             for name in sorted(self.properties):
                 value = self.properties[name]
-                property_lines.append(format_property(name, value) + b"\n")
-            properties_section = b"".join(property_lines)
+                property_lines.append(b"\n" + format_property(name, value))
         else:
-            properties_section = b""
+            property_lines = []
         if self.file_iter is None:
-            filecommands = b""
+            filecommands = []
         else:
             if include_file_contents:
                 format_str = bytes
             else:
                 format_str = str
-            filecommands = b"".join([format_str(c) for c in self.iter_files()])
-        return b"".join([b"commit " + self.ref + b"\n",
-            mark_line,
-            committer, msg_section, from_line, merge_lines, properties_section, filecommands])
+            filecommands = [(b"\n" + format_str(c)) for c in self.iter_files()]
+        return b"".join([b"commit " + self.ref,
+            mark_line] + author_section + msg_section + [from_line] + merge_lines + property_lines + filecommands)
 
     def dump_str(self, names=None, child_lists=None, verbose=False):
         result = [ImportCommand.dump_str(self, names, verbose=verbose)]
@@ -215,7 +213,7 @@ class CommitCommand(ImportCommand):
 class FeatureCommand(ImportCommand):
 
     def __init__(self, feature_name, value=None, lineno=0):
-        ImportCommand.__init__(self, 'feature')
+        ImportCommand.__init__(self, b'feature')
         self.feature_name = feature_name
         self.value = value
         self.lineno = lineno
@@ -231,7 +229,7 @@ class FeatureCommand(ImportCommand):
 class ProgressCommand(ImportCommand):
 
     def __init__(self, message):
-        ImportCommand.__init__(self, 'progress')
+        ImportCommand.__init__(self, b'progress')
         self.message = message
 
     def __bytes__(self):
@@ -241,7 +239,7 @@ class ProgressCommand(ImportCommand):
 class ResetCommand(ImportCommand):
 
     def __init__(self, ref, from_):
-        ImportCommand.__init__(self, 'reset')
+        ImportCommand.__init__(self, b'reset')
         self.ref = ref
         self.from_ = from_
 
@@ -261,7 +259,7 @@ class ResetCommand(ImportCommand):
 class TagCommand(ImportCommand):
 
     def __init__(self, id, from_, tagger, message):
-        ImportCommand.__init__(self, 'tag')
+        ImportCommand.__init__(self, b'tag')
         self.id = id
         self.from_ = from_
         self.tagger = tagger
@@ -331,7 +329,8 @@ class FileModifyCommand(FileCommand):
         else:
             dataref = self.dataref
         path = format_path(self.path)
-        return b"M " + self._format_mode(self.mode) + b" " + dataref + b" " + path + datastr
+        return b"".join([b"M ", self._format_mode(self.mode), b" ", dataref +
+            b" ", path, datastr])
 
 
 class FileDeleteCommand(FileCommand):
@@ -418,11 +417,17 @@ def format_who_when(fields):
     offset_minutes = offset / 60 - offset_hours * 60
     offset_str = "%s%02d%02d" % (offset_sign, offset_hours, offset_minutes)
     name = fields[0]
-    if name == b'':
+    if type(name) != bytes:
+        raise TypeError("Name should be bytestring")
+    if name.endswith(b" "):
+        raise ValueError("name %r ends with space" % name)
+    if len(name) == 0:
         sep = b''
     else:
         sep = b' '
     email = fields[1]
+    if type(email) != bytes:
+        raise TypeError("Email should be bytestring")
     return (name + sep + b"<" + email + b">" +
             (" %d " % fields[2]).encode('ascii') + offset_str.encode('ascii'))
 

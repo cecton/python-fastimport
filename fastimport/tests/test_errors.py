@@ -35,7 +35,7 @@ class TestErrors(TestCase):
             str(e))
 
     def test_InvalidCommand(self):
-        e = errors.InvalidCommand(99, 'foo')
+        e = errors.InvalidCommand(99, b'foo')
         self.assertEqual("line 99: Invalid command 'foo'",
             str(e))
 

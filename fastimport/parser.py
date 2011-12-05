@@ -158,7 +158,7 @@ The grammar is:
   not_lf  ::= # Any byte that is not ASCII newline (LF);
 """
 
-
+import codecs
 import re
 import sys
 
@@ -415,8 +415,8 @@ class ImportParser(LineBasedParser):
     def _parse_tag(self, name):
         """Parse a tag command."""
         from_ = self._get_from('tag')
-        tagger = self._get_user_info('tag', 'tagger', accept_just_who=True)
-        message = self._get_data('tag', 'message')
+        tagger = self._get_user_info('tag', b'tagger', accept_just_who=True)
+        message = self._get_data('tag', b'message')
         return commands.TagCommand(name, from_, tagger, message)
 
     def _get_mark_if_any(self):
@@ -528,7 +528,7 @@ class ImportParser(LineBasedParser):
                 self.abort(errors.BadFormat, cmd, section, s)
         name = match.group(1)
         if len(name) > 0:
-            if name[-1] == " ":
+            if name.endswith(b" "):
                 name = name[:-1]
         email = match.group(2)
         # While it shouldn't happen, some datasets have email addresses
@@ -601,4 +601,4 @@ class ImportParser(LineBasedParser):
 def _unquote_c_string(s):
     """replace C-style escape sequences (\n, \", etc.) with real chars."""
     # HACK: Python strings are close enough
-    return s.decode('string_escape', 'replace')
+    return codecs.escape_decode(s)[0]

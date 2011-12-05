@@ -263,8 +263,8 @@ class TestImportParser(unittest.TestCase):
 class TestStringParsing(unittest.TestCase):
 
     def test_unquote(self):
-        s = r'hello \"sweet\" wo\\r\tld'
-        self.assertEquals(r'hello "sweet" wo\r' + "\tld",
+        s = br'hello \"sweet\" wo\\r\tld'
+        self.assertEqual(br'hello "sweet" wo\r' + b"\tld",
             parser._unquote_c_string(s))
 
 

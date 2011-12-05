@@ -60,29 +60,29 @@ class TestCommitDisplay(TestCase):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
         name = '\u013d\xf3r\xe9m \xcdp\u0161\xfam'
         name_utf8 = name.encode('utf8')
-        committer = (name, b'test@example.com', 1234567890, -6 * 3600)
+        committer = (name_utf8, b'test@example.com', 1234567890, -6 * 3600)
         c = commands.CommitCommand(b"refs/heads/master", b"bbb", None, committer,
             b"release v1.0", b":aaa", None, None)
         self.assertEqual(
             b"commit refs/heads/master\n"
             b"mark :bbb\n"
-            b"committer %s <test@example.com> 1234567890 -0600\n"
+            b"committer " + name_utf8 + b" <test@example.com> 1234567890 -0600\n"
             b"data 12\n"
             b"release v1.0\n"
-            b"from :aaa" + name_utf8,
+            b"from :aaa",
             bytes(c))
 
     def test_commit_no_mark(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", None, None, committer,
-            "release v1.0", ":aaa", None, None)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", None, None, committer,
+            b"release v1.0", b":aaa", None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa",
+            b"commit refs/heads/master\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
             bytes(c))
 
     def test_commit_no_from(self):

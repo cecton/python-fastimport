@@ -1,1 +1,3 @@
 .testrepository
+__pycache__
+build

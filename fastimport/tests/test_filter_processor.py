@@ -113,7 +113,7 @@ class TestCaseWithFiltering(TestCase):
         p = parser.ImportParser(s)
         proc.process(p.iter_commands)
         out = outf.getvalue()
-        self.assertEquals(expected, out)
+        self.assertEqual(expected, out)
 
 class TestNoFiltering(TestCaseWithFiltering):
 
@@ -1000,7 +1000,7 @@ M 644 :99 data/DATA2
 
     def test_with_excludes(self):
         params = {'include_paths': None,
-                  'exclude_paths': ['data/DATA'],
+                  'exclude_paths': [b'data/DATA'],
                   'squash_empty_commits': False}
         self.assertFiltering(_SAMPLE_FROM_MERGE_COMMIT, params, \
 b"""blob
@@ -1035,7 +1035,7 @@ M 644 :99 data/DATA2
 """)
 
     def test_with_file_includes(self):
-        params = {'include_paths': ['COPYING', 'data/DATA2'],
+        params = {'include_paths': [b'COPYING', b'data/DATA2'],
                   'exclude_paths': None,
                   'squash_empty_commits': False}
         self.assertFiltering(_SAMPLE_FROM_MERGE_COMMIT, params, \
