@@ -234,26 +234,26 @@ class TestHeadTracking(unittest.TestCase):
 
     def test_mainline(self):
         self.assertHeads(_SAMPLE_MAINLINE, {
-            ':102': set(['refs/heads/master']),
+            b':102': set([b'refs/heads/master']),
             })
 
     def test_two_heads(self):
         self.assertHeads(_SAMPLE_TWO_HEADS, {
-            ':101': set(['refs/heads/mybranch']),
-            ':102': set(['refs/heads/master']),
+            b':101': set([b'refs/heads/mybranch']),
+            b':102': set([b'refs/heads/master']),
             })
 
     def test_two_branches_merged(self):
         self.assertHeads(_SAMPLE_TWO_BRANCHES_MERGED, {
-            ':103': set(['refs/heads/master']),
+            b':103': set([b'refs/heads/master']),
             })
 
     def test_reset(self):
         self.assertHeads(_SAMPLE_RESET, {
-            ':100': set(['refs/heads/master', 'refs/remotes/origin/master']),
+            b':100': set([b'refs/heads/master', b'refs/remotes/origin/master']),
             })
 
     def test_reset_with_more_commits(self):
         self.assertHeads(_SAMPLE_RESET_WITH_MORE_COMMITS, {
-            ':101': set(['refs/remotes/origin/master']),
+            b':101': set([b'refs/remotes/origin/master']),
             })

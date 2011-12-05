@@ -128,7 +128,7 @@ class FilterProcessor(processor.ImportProcessor):
         else:
             parents = None
         if cmd.mark is not None:
-            self.parents[":" + cmd.mark] = parents
+            self.parents[b":" + cmd.mark] = parents
 
     def reset_handler(self, cmd):
         """Process a ResetCommand."""
@@ -158,10 +158,10 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _print_command(self, cmd):
         """Wrapper to avoid adding unnecessary blank lines."""
-        text = repr(cmd)
+        text = bytes(cmd)
         self.outf.write(text)
-        if not text.endswith("\n"):
-            self.outf.write("\n")
+        if not text.endswith(b"\n"):
+            self.outf.write(b"\n")
 
     def _filter_filecommands(self, filecmd_iter):
         """Return the filecommands filtered by includes & excludes.

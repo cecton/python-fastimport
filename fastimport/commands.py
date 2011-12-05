@@ -136,9 +136,9 @@ class CommitCommand(ImportCommand):
         self._binary = ['file_iter']
         # Provide a unique id in case the mark is missing
         if mark is None:
-            self.id = '@%d' % lineno
+            self.id = ('@%d' % lineno).encode('ascii')
         else:
-            self.id = ':%s' % mark
+            self.id = (':%s' % mark).encode('ascii')
 
     def __repr__(self):
         return self.to_bytes(include_file_contents=str).decode('utf-8', 'replace')
@@ -152,7 +152,7 @@ class CommitCommand(ImportCommand):
         else:
             mark_line = b"mark :" + self.mark + b"\n"
         if self.author is None:
-            author_section = ""
+            author_section = b""
         else:
             author_section = b"author " + format_who_when(self.author) + b"\n"
             if use_features and self.more_authors:
@@ -187,8 +187,8 @@ class CommitCommand(ImportCommand):
                 format_str = bytes
             else:
                 format_str = str
-            filecommands = "".join([format_str(c) for c in self.iter_files()])
-        return "".join([b"commit " + self.ref,
+            filecommands = b"".join([format_str(c) for c in self.iter_files()])
+        return b"".join([b"commit " + self.ref + b"\n",
             mark_line,
             committer, msg_section, from_line, merge_lines, properties_section, filecommands])
 
@@ -254,7 +254,7 @@ class ResetCommand(ImportCommand):
             # was needed. Always emit it, since it doesn't hurt and maintains
             # compatibility with older versions.
             # http://git.kernel.org/?p=git/git.git;a=commit;h=655e8515f279c01f525745d443f509f97cd805ab
-            from_line = "\nfrom " + self.from_ + b"\n"
+            from_line = b"\nfrom " + self.from_ + b"\n"
         return b"reset " + self.ref + from_line
 
 
@@ -281,7 +281,7 @@ class TagCommand(ImportCommand):
         else:
             msg = self.message
             msg_section = ("\ndata %d\n" % len(msg)).encode('ascii') + msg
-        return b"tag " + "".join([self.id, from_line, tagger_line, msg_section])
+        return b"tag " + b"".join([self.id, from_line, tagger_line, msg_section])
 
 
 class FileCommand(ImportCommand):
@@ -327,11 +327,11 @@ class FileModifyCommand(FileCommand):
         elif self.dataref is None:
             dataref = b"inline"
             if include_file_contents:
-                datastr = "\ndata %d\n%s" % (len(self.data), self.data)
+                datastr = ("\ndata %d\n" % len(self.data)).encode('ascii') + self.data
         else:
-            dataref = "%s" % (self.dataref,)
+            dataref = self.dataref
         path = format_path(self.path)
-        return "M %s %s %s%s" % (self._format_mode(self.mode), dataref, path, datastr)
+        return b"M " + self._format_mode(self.mode) + b" " + dataref + b" " + path + datastr
 
 
 class FileDeleteCommand(FileCommand):

@@ -242,24 +242,24 @@ class TestTagDisplay(TestCase):
             bytes(c))
 
     def test_tag_no_from(self):
-        tagger = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.TagCommand("refs/tags/v1.0", None, tagger, "create v1.0")
+        tagger = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.TagCommand(b"refs/tags/v1.0", None, tagger, b"create v1.0")
         self.assertEqual(
-            "tag refs/tags/v1.0\n"
-            "tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 11\n"
-            "create v1.0",
+            b"tag refs/tags/v1.0\n"
+            b"tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 11\n"
+            b"create v1.0",
             bytes(c))
 
 
 class TestFileModifyDisplay(TestCase):
 
     def test_filemodify_file(self):
-        c = commands.FileModifyCommand(b"foo/bar", 0o100644, ":23", None)
-        self.assertEqual("M 644 :23 foo/bar", bytes(c))
+        c = commands.FileModifyCommand(b"foo/bar", 0o100644, b":23", None)
+        self.assertEqual(b"M 644 :23 foo/bar", bytes(c))
 
     def test_filemodify_file_executable(self):
-        c = commands.FileModifyCommand(b"foo/bar", 0o100755, ":23", None)
+        c = commands.FileModifyCommand(b"foo/bar", 0o100755, b":23", None)
         self.assertEqual(b"M 755 :23 foo/bar", bytes(c))
 
     def test_filemodify_file_internal(self):
@@ -268,12 +268,12 @@ class TestFileModifyDisplay(TestCase):
         self.assertEqual(b"M 644 inline foo/bar\ndata 11\nhello world", bytes(c))
 
     def test_filemodify_symlink(self):
-        c = commands.FileModifyCommand(b"foo/bar", 0o120000, None, "baz")
+        c = commands.FileModifyCommand(b"foo/bar", 0o120000, None, b"baz")
         self.assertEqual(b"M 120000 inline foo/bar\ndata 3\nbaz", bytes(c))
 
     def test_filemodify_treeref(self):
         c = commands.FileModifyCommand(b"tree-info", 0o160000,
-            "revision-id-info", None)
+            b"revision-id-info", None)
         self.assertEqual(b"M 160000 revision-id-info tree-info", bytes(c))
 
 
@@ -318,23 +318,23 @@ class TestFileDeleteAllDisplay(TestCase):
 class TestPathChecking(TestCase):
 
     def test_filemodify_path_checking(self):
-        self.assertRaises(ValueError, commands.FileModifyCommand, "",
-            0o100644, None, "text")
+        self.assertRaises(ValueError, commands.FileModifyCommand, b"",
+            0o100644, None, b"text")
         self.assertRaises(ValueError, commands.FileModifyCommand, None,
-            0o100644, None, "text")
+            0o100644, None, b"text")
 
     def test_filedelete_path_checking(self):
-        self.assertRaises(ValueError, commands.FileDeleteCommand, "")
+        self.assertRaises(ValueError, commands.FileDeleteCommand, b"")
         self.assertRaises(ValueError, commands.FileDeleteCommand, None)
 
     def test_filerename_path_checking(self):
-        self.assertRaises(ValueError, commands.FileRenameCommand, "", "foo")
-        self.assertRaises(ValueError, commands.FileRenameCommand, None, "foo")
-        self.assertRaises(ValueError, commands.FileRenameCommand, "foo", "")
-        self.assertRaises(ValueError, commands.FileRenameCommand, "foo", None)
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"", b"foo")
+        self.assertRaises(ValueError, commands.FileRenameCommand, None, b"foo")
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"foo", b"")
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"foo", None)
 
     def test_filecopy_path_checking(self):
-        self.assertRaises(ValueError, commands.FileCopyCommand, "", "foo")
-        self.assertRaises(ValueError, commands.FileCopyCommand, None, "foo")
-        self.assertRaises(ValueError, commands.FileCopyCommand, "foo", "")
-        self.assertRaises(ValueError, commands.FileCopyCommand, "foo", None)
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"", b"foo")
+        self.assertRaises(ValueError, commands.FileCopyCommand, None, b"foo")
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"foo", b"")
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"foo", None)

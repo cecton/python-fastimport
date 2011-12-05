@@ -69,7 +69,7 @@ def _common_path_and_rest(l1, l2, common=[]):
 
 def common_path(path1, path2):
     """Find the common bit of 2 paths."""
-    return ''.join(_common_path_and_rest(path1, path2)[0])
+    return b''.join(_common_path_and_rest(path1, path2)[0])
 
 
 def binary_stream(stream):
@@ -100,14 +100,14 @@ def common_directory(paths):
     """
     import posixpath
     def get_dir_with_slash(path):
-        if path == '' or path.endswith('/'):
+        if path == b'' or path.endswith(b'/'):
             return path
         else:
             dirname, basename = posixpath.split(path)
-            if dirname == '':
+            if dirname == b'':
                 return dirname
             else:
-                return dirname + '/'
+                return dirname + b'/'
 
     if not paths:
         return None
@@ -135,11 +135,11 @@ def is_inside(dir, fname):
     if dir == fname:
         return True
 
-    if dir == '':
+    if dir == b'':
         return True
 
-    if dir[-1] != '/':
-        dir += '/'
+    if dir[-1] != b'/':
+        dir += b'/'
 
     return fname.startswith(dir)
 
