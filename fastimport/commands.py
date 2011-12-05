@@ -92,17 +92,20 @@ class BlobCommand(ImportCommand):
         self.lineno = lineno
         # Provide a unique id in case the mark is missing
         if mark is None:
-            self.id = '@%d' % lineno
+            self.id = ('@%d' % lineno).encode('ascii')
         else:
-            self.id = ':' + mark
+            self.id = b':' + mark
         self._binary = ['data']
 
-    def __repr__(self):
+    def __bytes__(self):
         if self.mark is None:
-            mark_line = ""
+            mark_line = b""
         else:
-            mark_line = "\nmark :%s" % self.mark
-        return "blob%s\ndata %d\n%s" % (mark_line, len(self.data), self.data)
+            mark_line = b"mark :" + self.mark + b"\n"
+        return (b"blob\n" +
+                mark_line +
+                ("data %d\n" % len(self.data)).encode('ascii') +
+                self.data)
 
 
 class CheckpointCommand(ImportCommand):
@@ -110,8 +113,8 @@ class CheckpointCommand(ImportCommand):
     def __init__(self):
         ImportCommand.__init__(self, 'checkpoint')
 
-    def __repr__(self):
-        return "checkpoint"
+    def __bytes__(self):
+        return b"checkpoint"
 
 
 class CommitCommand(ImportCommand):
@@ -138,58 +141,56 @@ class CommitCommand(ImportCommand):
             self.id = ':%s' % mark
 
     def __repr__(self):
-        return self.to_string(include_file_contents=True)
+        return self.to_bytes(include_file_contents=str).decode('utf-8', 'replace')
 
-    def __str__(self):
-        return self.to_string(include_file_contents=False)
+    def __bytes__(self):
+        return self.to_bytes(include_file_contents=True)
 
-    def to_string(self, use_features=True, include_file_contents=False):
+    def to_bytes(self, use_features=True, include_file_contents=False):
         if self.mark is None:
-            mark_line = ""
+            mark_line = b""
         else:
-            mark_line = "\nmark :%s" % self.mark
+            mark_line = b"mark :" + self.mark + b"\n"
         if self.author is None:
             author_section = ""
         else:
-            author_section = "\nauthor %s" % format_who_when(self.author)
+            author_section = b"author " + format_who_when(self.author) + b"\n"
             if use_features and self.more_authors:
                 for author in self.more_authors:
-                    author_section += "\nauthor %s" % format_who_when(author)
-        committer = "committer %s" % format_who_when(self.committer)
+                    author_section += b"author " + format_who_when(author) + b"\n"
+        committer = b"committer " + format_who_when(self.committer) + b"\n"
         if self.message is None:
-            msg_section = ""
+            msg_section = b""
         else:
             msg = self.message
-            msg_section = "\ndata %d\n%s" % (len(msg), msg)
+            msg_section = ("data %d\n" % len(msg)).encode('ascii') + msg + b"\n"
         if self.from_ is None:
-            from_line = ""
+            from_line = b""
         else:
-            from_line = "\nfrom %s" % self.from_
+            from_line = b"from " + self.from_ + b"\n"
         if self.merges is None:
-            merge_lines = ""
+            merge_lines = b""
         else:
-            merge_lines = "".join(["\nmerge %s" % (m,)
-                for m in self.merges])
+            merge_lines = b"".join([(b"merge " + m + b"\n") for m in self.merges])
         if use_features and self.properties:
             property_lines = []
             for name in sorted(self.properties):
                 value = self.properties[name]
-                property_lines.append("\n" + format_property(name, value))
-            properties_section = "".join(property_lines)
+                property_lines.append(format_property(name, value) + b"\n")
+            properties_section = b"".join(property_lines)
         else:
-            properties_section = ""
+            properties_section = b""
         if self.file_iter is None:
-            filecommands = ""
+            filecommands = b""
         else:
             if include_file_contents:
-                format_str = "\n%r"
+                format_str = bytes
             else:
-                format_str = "\n%s"
-            filecommands = "".join([format_str % (c,)
-                for c in self.iter_files()])
-        return "commit %s%s%s\n%s%s%s%s%s%s" % (self.ref, mark_line,
-            author_section, committer, msg_section, from_line, merge_lines,
-            properties_section, filecommands)
+                format_str = str
+            filecommands = "".join([format_str(c) for c in self.iter_files()])
+        return "".join([b"commit " + self.ref,
+            mark_line,
+            committer, msg_section, from_line, merge_lines, properties_section, filecommands])
 
     def dump_str(self, names=None, child_lists=None, verbose=False):
         result = [ImportCommand.dump_str(self, names, verbose=verbose)]
@@ -219,12 +220,12 @@ class FeatureCommand(ImportCommand):
         self.value = value
         self.lineno = lineno
 
-    def __repr__(self):
+    def __bytes__(self):
         if self.value is None:
-            value_text = ""
+            value_text = b""
         else:
-            value_text = "=%s" % self.value
-        return "feature %s%s" % (self.feature_name, value_text)
+            value_text = b"=" + self.value.encode('utf-8')
+        return b"feature " + self.feature_name.encode('utf-8') + value_text
 
 
 class ProgressCommand(ImportCommand):
@@ -233,8 +234,8 @@ class ProgressCommand(ImportCommand):
         ImportCommand.__init__(self, 'progress')
         self.message = message
 
-    def __repr__(self):
-        return "progress %s" % (self.message,)
+    def __bytes__(self):
+        return b"progress " + self.message
 
 
 class ResetCommand(ImportCommand):
@@ -244,17 +245,17 @@ class ResetCommand(ImportCommand):
         self.ref = ref
         self.from_ = from_
 
-    def __repr__(self):
+    def __bytes__(self):
         if self.from_ is None:
-            from_line = ""
+            from_line = b""
         else:
             # According to git-fast-import(1), the extra LF is optional here;
             # however, versions of git up to 1.5.4.3 had a bug by which the LF
             # was needed. Always emit it, since it doesn't hurt and maintains
             # compatibility with older versions.
             # http://git.kernel.org/?p=git/git.git;a=commit;h=655e8515f279c01f525745d443f509f97cd805ab
-            from_line = "\nfrom %s\n" % self.from_
-        return "reset %s%s" % (self.ref, from_line)
+            from_line = "\nfrom " + self.from_ + b"\n"
+        return b"reset " + self.ref + from_line
 
 
 class TagCommand(ImportCommand):
@@ -266,21 +267,21 @@ class TagCommand(ImportCommand):
         self.tagger = tagger
         self.message = message
 
-    def __repr__(self):
+    def __bytes__(self):
         if self.from_ is None:
-            from_line = ""
+            from_line = b""
         else:
-            from_line = "\nfrom %s" % self.from_
+            from_line = b"\nfrom " + self.from_
         if self.tagger is None:
-            tagger_line = ""
+            tagger_line = b""
         else:
-            tagger_line = "\ntagger %s" % format_who_when(self.tagger)
+            tagger_line = b"\ntagger " + format_who_when(self.tagger)
         if self.message is None:
-            msg_section = ""
+            msg_section = b""
         else:
             msg = self.message
-            msg_section = "\ndata %d\n%s" % (len(msg), msg)
-        return "tag %s%s%s%s" % (self.id, from_line, tagger_line, msg_section)
+            msg_section = ("\ndata %d\n" % len(msg)).encode('ascii') + msg
+        return b"tag " + "".join([self.id, from_line, tagger_line, msg_section])
 
 
 class FileCommand(ImportCommand):
@@ -299,7 +300,7 @@ class FileModifyCommand(FileCommand):
         self.data = data
         self._binary = ['data']
 
-    def __repr__(self):
+    def __bytes__(self):
         return self.to_string(include_file_contents=True)
 
     def __str__(self):
@@ -307,24 +308,24 @@ class FileModifyCommand(FileCommand):
 
     def _format_mode(self, mode):
         if mode in (0o755, 0o100755):
-            return "755"
+            return b"755"
         elif mode in (0o644, 0o100644):
-            return "644"
+            return b"644"
         elif mode == 0o40000:
-            return "040000"
+            return b"040000"
         elif mode == 0o120000:
-            return "120000"
+            return b"120000"
         elif mode == 0o160000:
-            return "160000"
+            return b"160000"
         else:
             raise AssertionError("Unknown mode %o" % mode)
 
     def to_string(self, include_file_contents=False):
-        datastr = ""
+        datastr = b""
         if stat.S_ISDIR(self.mode):
-            dataref = '-'
+            dataref = b'-'
         elif self.dataref is None:
-            dataref = "inline"
+            dataref = b"inline"
             if include_file_contents:
                 datastr = "\ndata %d\n%s" % (len(self.data), self.data)
         else:
@@ -339,8 +340,8 @@ class FileDeleteCommand(FileCommand):
         FileCommand.__init__(self, 'filedelete')
         self.path = check_path(path)
 
-    def __repr__(self):
-        return "D %s" % (format_path(self.path),)
+    def __bytes__(self):
+        return b"D " + format_path(self.path)
 
 
 class FileCopyCommand(FileCommand):
@@ -350,9 +351,9 @@ class FileCopyCommand(FileCommand):
         self.src_path = check_path(src_path)
         self.dest_path = check_path(dest_path)
 
-    def __repr__(self):
-        return "C %s %s" % (
-            format_path(self.src_path, quote_spaces=True),
+    def __bytes__(self):
+        return (b"C " +
+            format_path(self.src_path, quote_spaces=True) + b" " +
             format_path(self.dest_path))
 
 
@@ -363,9 +364,9 @@ class FileRenameCommand(FileCommand):
         self.old_path = check_path(old_path)
         self.new_path = check_path(new_path)
 
-    def __repr__(self):
-        return "R %s %s" % (
-            format_path(self.old_path, quote_spaces=True),
+    def __bytes__(self):
+        return (b"R " + 
+            format_path(self.old_path, quote_spaces=True) + b" " +
             format_path(self.new_path))
 
 
@@ -374,8 +375,8 @@ class FileDeleteAllCommand(FileCommand):
     def __init__(self):
         FileCommand.__init__(self, 'filedeleteall')
 
-    def __repr__(self):
-        return "deleteall"
+    def __bytes__(self):
+        return b"deleteall"
 
 
 def check_path(path):
@@ -384,24 +385,24 @@ def check_path(path):
     :return: the path if all is OK
     :raise ValueError: if the path is illegal
     """
-    if path is None or path == '' or path[0] == "/":
+    if path is None or path == b'' or path[0] == b"/":
         raise ValueError("illegal path '%s'" % path)
-    if type(path) != str:
+    if type(path) != bytes:
         raise TypeError("illegale type for path '%r'" % path)
     return path
 
 
 def format_path(p, quote_spaces=False):
     """Format a path in utf8, quoting it if necessary."""
-    if '\n' in p:
+    if b'\n' in p:
         import re
-        p = re.sub('\n', '\\n', p)
+        p = re.sub(b'\n', b'\\n', p)
         quote = True
     else:
-        quote = p[0] == '"' or (quote_spaces and ' ' in p)
+        quote = p.startswith(b'"') or (quote_spaces and b' ' in p)
     if quote:
-        extra = GIT_FAST_IMPORT_NEEDS_EXTRA_SPACE_AFTER_QUOTE and ' ' or ''
-        p = '"%s"%s' % (p, extra)
+        extra = GIT_FAST_IMPORT_NEEDS_EXTRA_SPACE_AFTER_QUOTE and b' ' or b''
+        p = b'"' + p + b'"' + extra
     return p
 
 
@@ -417,17 +418,13 @@ def format_who_when(fields):
     offset_minutes = offset / 60 - offset_hours * 60
     offset_str = "%s%02d%02d" % (offset_sign, offset_hours, offset_minutes)
     name = fields[0]
-    if name == '':
-        sep = ''
+    if name == b'':
+        sep = b''
     else:
-        sep = ' '
-    if isinstance(name, str):
-        name = name.encode('utf8')
+        sep = b' '
     email = fields[1]
-    if isinstance(email, str):
-        email = email.encode('utf8')
-    result = "%s%s<%s> %d %s" % (name, sep, email, fields[2], offset_str)
-    return result
+    return (name + sep + b"<" + email + b">" +
+            (" %d " % fields[2]).encode('ascii') + offset_str.encode('ascii'))
 
 
 def format_property(name, value):
@@ -435,7 +432,7 @@ def format_property(name, value):
     utf8_name = name.encode('utf8')
     if value is not None:
         utf8_value = value.encode('utf8')
-        result = "property %s %d %s" % (utf8_name, len(utf8_value), utf8_value)
+        result = b"property " + utf8_name + (" %d " % len(utf8_value)).encode('ascii') + utf8_value
     else:
-        result = "property %s" % (utf8_name,)
+        result = b"property " + utf8_name
     return result

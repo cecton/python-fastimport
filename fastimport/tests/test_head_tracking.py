@@ -15,7 +15,7 @@
 
 """Test tracking of heads"""
 
-from io import StringIO
+from io import BytesIO
 
 from fastimport import (
     commands,
@@ -31,7 +31,7 @@ from fastimport.reftracker import (
 
 # A sample input stream that only adds files to a branch
 _SAMPLE_MAINLINE = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -77,7 +77,7 @@ M 644 :4 doc/index.txt
 
 # A sample input stream that adds files to two branches
 _SAMPLE_TWO_HEADS = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -123,7 +123,7 @@ M 644 :4 doc/index.txt
 
 # A sample input stream that adds files to two branches
 _SAMPLE_TWO_BRANCHES_MERGED = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -178,7 +178,7 @@ D doc/index.txt
 
 # A sample input stream that contains a reset
 _SAMPLE_RESET = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -194,7 +194,7 @@ from :100
 
 # A sample input stream that contains a reset and more commits
 _SAMPLE_RESET_WITH_MORE_COMMITS = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -219,7 +219,7 @@ D doc/README.txt
 class TestHeadTracking(unittest.TestCase):
 
     def assertHeads(self, input, expected):
-        s = StringIO(input)
+        s = BytesIO(input)
         p = parser.ImportParser(s)
         reftracker = RefTracker()
         for cmd in p.iter_commands():
