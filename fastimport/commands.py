@@ -16,6 +16,7 @@
 """Import command classes."""
 
 import stat
+import collections
 
 # There is a bug in git 1.5.4.3 and older by which unquoting a string consumes
 # one extra character. Set this variable to True to work-around it. It only
@@ -68,7 +69,7 @@ class ImportCommand(object):
         """
         interesting = {}
         if names is None:
-            fields = [k for k in self.__dict__.keys() if not k.startswith('_')]
+            fields = [k for k in list(self.__dict__.keys()) if not k.startswith('_')]
         else:
             fields = names
         for field in fields:
@@ -205,7 +206,7 @@ class CommitCommand(ImportCommand):
     def iter_files(self):
         """Iterate over files."""
         # file_iter may be a callable or an iterator
-        if callable(self.file_iter):
+        if isinstance(self.file_iter, collections.Callable):
             return self.file_iter()
         return iter(self.file_iter)
 
@@ -305,15 +306,15 @@ class FileModifyCommand(FileCommand):
         return self.to_string(include_file_contents=False)
 
     def _format_mode(self, mode):
-        if mode in (0755, 0100755):
+        if mode in (0o755, 0o100755):
             return "755"
-        elif mode in (0644, 0100644):
+        elif mode in (0o644, 0o100644):
             return "644"
-        elif mode == 040000:
+        elif mode == 0o40000:
             return "040000"
-        elif mode == 0120000:
+        elif mode == 0o120000:
             return "120000"
-        elif mode == 0160000:
+        elif mode == 0o160000:
             return "160000"
         else:
             raise AssertionError("Unknown mode %o" % mode)
@@ -420,10 +421,10 @@ def format_who_when(fields):
         sep = ''
     else:
         sep = ' '
-    if isinstance(name, unicode):
+    if isinstance(name, str):
         name = name.encode('utf8')
     email = fields[1]
-    if isinstance(email, unicode):
+    if isinstance(email, str):
         email = email.encode('utf8')
     result = "%s%s<%s> %d %s" % (name, sep, email, fields[2], offset_str)
     return result

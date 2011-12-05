@@ -162,9 +162,9 @@ The grammar is:
 import re
 import sys
 
-import commands
-import dates
-import errors
+from . import commands
+from . import dates
+from . import errors
 
 
 ## Stream parsing ##
@@ -516,7 +516,7 @@ class ImportParser(LineBasedParser):
             try:
                 when = self.date_parser(datestr, self.lineno)
             except ValueError:
-                print "failed to parse datestr '%s'" % (datestr,)
+                print("failed to parse datestr '%s'" % (datestr,))
                 raise
         else:
             match = _WHO_RE.search(s)
@@ -576,7 +576,7 @@ class ImportParser(LineBasedParser):
             parts[1] = parts[1][1:-1]
         elif parts[1].startswith('"') or parts[1].endswith('"'):
             self.abort(errors.BadFormat, '?', '?', s)
-        return map(_unquote_c_string, parts)
+        return list(map(_unquote_c_string, parts))
 
     def _mode(self, s):
         """Check file mode format and parse into an int.
@@ -585,15 +585,15 @@ class ImportParser(LineBasedParser):
         """
         # Note: Output from git-fast-export slightly different to spec
         if s in ['644', '100644', '0100644']:
-            return 0100644
+            return 0o100644
         elif s in ['755', '100755', '0100755']:
-            return 0100755
+            return 0o100755
         elif s in ['040000', '0040000']:
-            return 040000
+            return 0o40000
         elif s in ['120000', '0120000']:
-            return 0120000
+            return 0o120000
         elif s in ['160000', '0160000']:
-            return 0160000
+            return 0o160000
         else:
             self.abort(errors.BadFormat, 'filemodify', 'mode', s)
 

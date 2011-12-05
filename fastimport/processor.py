@@ -22,7 +22,7 @@ for basing real processors on. See the processors package for examples.
 import sys
 import time
 
-import errors
+from . import errors
 
 
 class ImportProcessor(object):

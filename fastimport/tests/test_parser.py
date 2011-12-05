@@ -15,9 +15,9 @@
 
 """Test the Import parsing"""
 
-import StringIO
+import io
 
-import testtools
+import unittest
 
 from fastimport import (
     errors,
@@ -25,10 +25,10 @@ from fastimport import (
     )
 
 
-class TestLineBasedParser(testtools.TestCase):
+class TestLineBasedParser(unittest.TestCase):
 
     def test_push_line(self):
-        s = StringIO.StringIO("foo\nbar\nbaz\n")
+        s = io.StringIO("foo\nbar\nbaz\n")
         p = parser.LineBasedParser(s)
         self.assertEqual('foo', p.next_line())
         self.assertEqual('bar', p.next_line())
@@ -38,7 +38,7 @@ class TestLineBasedParser(testtools.TestCase):
         self.assertEqual(None, p.next_line())
 
     def test_read_bytes(self):
-        s = StringIO.StringIO("foo\nbar\nbaz\n")
+        s = io.StringIO("foo\nbar\nbaz\n")
         p = parser.LineBasedParser(s)
         self.assertEqual('fo', p.read_bytes(2))
         self.assertEqual('o\nb', p.read_bytes(3))
@@ -52,7 +52,7 @@ class TestLineBasedParser(testtools.TestCase):
     def test_read_until(self):
         # TODO
         return
-        s = StringIO.StringIO("foo\nbar\nbaz\nabc\ndef\nghi\n")
+        s = io.StringIO("foo\nbar\nbaz\nabc\ndef\nghi\n")
         p = parser.LineBasedParser(s)
         self.assertEqual('foo\nbar', p.read_until('baz'))
         self.assertEqual('abc', p.next_line())
@@ -143,10 +143,10 @@ multi-author test
 """
 
 
-class TestImportParser(testtools.TestCase):
+class TestImportParser(unittest.TestCase):
 
     def test_iter_commands(self):
-        s = StringIO.StringIO(_sample_import_text)
+        s = io.StringIO(_sample_import_text)
         p = parser.ImportParser(s)
         result = []
         for cmd in p.iter_commands():
@@ -186,7 +186,7 @@ class TestImportParser(testtools.TestCase):
         file_cmd1 = result.pop(0)
         self.assertEqual('filemodify', file_cmd1.name)
         self.assertEqual('README', file_cmd1.path)
-        self.assertEqual(0100644, file_cmd1.mode)
+        self.assertEqual(0o100644, file_cmd1.mode)
         self.assertEqual('Welcome from bugs\n', file_cmd1.data)
         cmd5 = result.pop(0)
         self.assertEqual('commit', cmd5.name)
@@ -204,7 +204,7 @@ class TestImportParser(testtools.TestCase):
         file_cmd2 = result.pop(0)
         self.assertEqual('filemodify', file_cmd2.name)
         self.assertEqual('README', file_cmd2.path)
-        self.assertEqual(0100644, file_cmd2.mode)
+        self.assertEqual(0o100644, file_cmd2.mode)
         self.assertEqual('Welcome from bugs, etc.', file_cmd2.data)
         cmd6 = result.pop(0)
         self.assertEqual(cmd6.name, 'checkpoint')
@@ -226,7 +226,7 @@ class TestImportParser(testtools.TestCase):
         file_cmd1 = result.pop(0)
         self.assertEqual('filemodify', file_cmd1.name)
         self.assertEqual('tree-id', file_cmd1.path)
-        self.assertEqual(0160000, file_cmd1.mode)
+        self.assertEqual(0o160000, file_cmd1.mode)
         self.assertEqual("rev-id", file_cmd1.dataref)
         cmd = result.pop(0)
         self.assertEqual('feature', cmd.name)
@@ -242,9 +242,9 @@ class TestImportParser(testtools.TestCase):
         self.assertEqual('test of properties', cmd.message)
         self.assertEqual({
             'p1': None,
-            'p2': u'hohum',
-            'p3': u'alpha\nbeta\ngamma',
-            'p4': u'whatever',
+            'p2': 'hohum',
+            'p3': 'alpha\nbeta\ngamma',
+            'p4': 'whatever',
             }, cmd.properties)
         cmd = result.pop(0)
         self.assertEqual('commit', cmd.name)
@@ -260,7 +260,7 @@ class TestImportParser(testtools.TestCase):
         self.assertEqual('donald@duck.org', cmd.more_authors[1][1])
 
 
-class TestStringParsing(testtools.TestCase):
+class TestStringParsing(unittest.TestCase):
 
     def test_unquote(self):
         s = r'hello \"sweet\" wo\\r\tld'
@@ -268,7 +268,7 @@ class TestStringParsing(testtools.TestCase):
             parser._unquote_c_string(s))
 
 
-class TestPathPairParsing(testtools.TestCase):
+class TestPathPairParsing(unittest.TestCase):
 
     def test_path_pair_simple(self):
         p = parser.ImportParser("")

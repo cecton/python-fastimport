@@ -15,9 +15,9 @@
 
 """Test FilterProcessor"""
 
-from cStringIO import StringIO
+from io import StringIO
 
-from testtools import TestCase
+from unittest import TestCase
 
 from fastimport import (
     parser,

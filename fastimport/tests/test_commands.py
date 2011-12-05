@@ -15,7 +15,7 @@
 
 """Test how Commands are displayed"""
 
-from testtools import TestCase
+from unittest import TestCase
 
 from fastimport import (
     commands,
@@ -58,7 +58,7 @@ class TestCommitDisplay(TestCase):
 
     def test_commit_unicode_committer(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        name = u'\u013d\xf3r\xe9m \xcdp\u0161\xfam'
+        name = '\u013d\xf3r\xe9m \xcdp\u0161\xfam'
         name_utf8 = name.encode('utf8')
         committer = (name, 'test@example.com', 1234567890, -6 * 3600)
         c = commands.CommitCommand("refs/heads/master", "bbb", None, committer,
@@ -133,7 +133,7 @@ class TestCommitDisplay(TestCase):
     def test_commit_with_filecommands(self):
         file_cmds = iter([
             commands.FileDeleteCommand('readme.txt'),
-            commands.FileModifyCommand('NEWS', 0100644, None,
+            commands.FileModifyCommand('NEWS', 0o100644, None,
                 'blah blah blah'),
             ])
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
@@ -180,8 +180,8 @@ class TestCommitDisplay(TestCase):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
         committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
         properties = {
-            u'greeting':  u'hello',
-            u'planet':    u'world',
+            'greeting':  'hello',
+            'planet':    'world',
             }
         c = commands.CommitCommand("refs/heads/master", "bbb", None,
             committer, "release v1.0", ":aaa", None, None,
@@ -255,24 +255,24 @@ class TestTagDisplay(TestCase):
 class TestFileModifyDisplay(TestCase):
 
     def test_filemodify_file(self):
-        c = commands.FileModifyCommand("foo/bar", 0100644, ":23", None)
+        c = commands.FileModifyCommand("foo/bar", 0o100644, ":23", None)
         self.assertEqual("M 644 :23 foo/bar", repr(c))
 
     def test_filemodify_file_executable(self):
-        c = commands.FileModifyCommand("foo/bar", 0100755, ":23", None)
+        c = commands.FileModifyCommand("foo/bar", 0o100755, ":23", None)
         self.assertEqual("M 755 :23 foo/bar", repr(c))
 
     def test_filemodify_file_internal(self):
-        c = commands.FileModifyCommand("foo/bar", 0100644, None,
+        c = commands.FileModifyCommand("foo/bar", 0o100644, None,
             "hello world")
         self.assertEqual("M 644 inline foo/bar\ndata 11\nhello world", repr(c))
 
     def test_filemodify_symlink(self):
-        c = commands.FileModifyCommand("foo/bar", 0120000, None, "baz")
+        c = commands.FileModifyCommand("foo/bar", 0o120000, None, "baz")
         self.assertEqual("M 120000 inline foo/bar\ndata 3\nbaz", repr(c))
 
     def test_filemodify_treeref(self):
-        c = commands.FileModifyCommand("tree-info", 0160000,
+        c = commands.FileModifyCommand("tree-info", 0o160000,
             "revision-id-info", None)
         self.assertEqual("M 160000 revision-id-info tree-info", repr(c))
 
@@ -319,9 +319,9 @@ class TestPathChecking(TestCase):
 
     def test_filemodify_path_checking(self):
         self.assertRaises(ValueError, commands.FileModifyCommand, "",
-            0100644, None, "text")
+            0o100644, None, "text")
         self.assertRaises(ValueError, commands.FileModifyCommand, None,
-            0100644, None, "text")
+            0o100644, None, "text")
 
     def test_filedelete_path_checking(self):
         self.assertRaises(ValueError, commands.FileDeleteCommand, "")

@@ -40,7 +40,7 @@ class QueryProcessor(processor.ImportProcessor):
             if 'commit-mark' in params:
                 self.interesting_commit = params['commit-mark']
                 del params['commit-mark']
-            for name, value in params.iteritems():
+            for name, value in params.items():
                 if value == 1:
                     # All fields
                     fields = None
@@ -54,13 +54,13 @@ class QueryProcessor(processor.ImportProcessor):
             return
         if self.interesting_commit and cmd.name == 'commit':
             if cmd.mark == self.interesting_commit:
-                print cmd.to_string()
+                print(cmd.to_string())
                 self._finished = True
             return
-        if self.parsed_params.has_key(cmd.name):
+        if cmd.name in self.parsed_params:
             fields = self.parsed_params[cmd.name]
             str = cmd.dump_str(fields, self.parsed_params, self.verbose)
-            print "%s" % (str,)
+            print("%s" % (str,))
 
     def progress_handler(self, cmd):
         """Process a ProgressCommand."""

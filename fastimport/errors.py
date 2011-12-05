@@ -20,18 +20,18 @@ _LOCATION_FMT = "line %(lineno)d: "
 
 # ImportError is heavily based on BzrError
 
-class ImportError(StandardError):
+class ImportError(Exception):
     """The base exception class for all import processing exceptions."""
 
     _fmt = "Unknown Import Error"
 
     def __init__(self, msg=None, **kwds):
-        StandardError.__init__(self)
+        Exception.__init__(self)
         if msg is not None:
             self._preformatted_string = msg
         else:
             self._preformatted_string = None
-            for key, value in kwds.items():
+            for key, value in list(kwds.items()):
                 setattr(self, key, value)
 
     def _format(self):
@@ -47,7 +47,7 @@ class ImportError(StandardError):
                 # __str__() should always return a 'str' object
                 # never a 'unicode' object.
                 return s
-        except (AttributeError, TypeError, NameError, ValueError, KeyError), e:
+        except (AttributeError, TypeError, NameError, ValueError, KeyError) as e:
             return 'Unprintable exception %s: dict=%r, fmt=%r, error=%r' \
                 % (self.__class__.__name__,
                    self.__dict__,
@@ -58,16 +58,16 @@ class ImportError(StandardError):
         u = self._format()
         if isinstance(u, str):
             # Try decoding the str using the default encoding.
-            u = unicode(u)
-        elif not isinstance(u, unicode):
+            u = str(u)
+        elif not isinstance(u, str):
             # Try to make a unicode object from it, because __unicode__ must
             # return a unicode object.
-            u = unicode(u)
+            u = str(u)
         return u
 
     def __str__(self):
         s = self._format()
-        if isinstance(s, unicode):
+        if isinstance(s, str):
             s = s.encode('utf8')
         else:
             # __str__ must return a str.

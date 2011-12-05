@@ -15,14 +15,14 @@
 
 """Test tracking of heads"""
 
-from cStringIO import StringIO
+from io import StringIO
 
 from fastimport import (
     commands,
     parser,
     )
 
-import testtools
+import unittest
 
 from fastimport.reftracker import (
     RefTracker,
@@ -216,7 +216,7 @@ from :100
 D doc/README.txt
 """
 
-class TestHeadTracking(testtools.TestCase):
+class TestHeadTracking(unittest.TestCase):
 
     def assertHeads(self, input, expected):
         s = StringIO(input)
