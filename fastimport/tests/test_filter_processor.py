@@ -102,18 +102,19 @@ M 644 :3 doc/README.txt
 M 644 :4 doc/index.txt
 """
 
+
 class TestCaseWithFiltering(TestCase):
 
     def assertFiltering(self, input, params, expected):
         outf = BytesIO()
-        proc = filter_processor.FilterProcessor(
-            params=params)
+        proc = filter_processor.FilterProcessor(params=params)
         proc.outf = outf
         s = BytesIO(input)
         p = parser.ImportParser(s)
         proc.process(p.iter_commands)
         out = outf.getvalue()
         self.assertEqual(expected, out)
+
 
 class TestNoFiltering(TestCaseWithFiltering):
 
@@ -858,7 +859,7 @@ class TestIncludePathsWithResets(TestCaseWithFiltering):
         # keep the reset but adjust 'from' accordingly.
         params = {'include_paths': [b'NEWS']}
         self.assertFiltering(_SAMPLE_WITH_RESETS, params,
-"""blob
+b"""blob
 mark :2
 data 17
 Life

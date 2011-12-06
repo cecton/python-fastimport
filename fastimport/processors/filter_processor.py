@@ -50,6 +50,7 @@ class FilterProcessor(processor.ImportProcessor):
     def pre_process(self):
         self.includes = self.params.get('include_paths')
         self.excludes = self.params.get('exclude_paths')
+
         self.squash_empty_commits = bool(
             self.params.get('squash_empty_commits', True))
         # What's the new root, if any
@@ -101,7 +102,7 @@ class FilterProcessor(processor.ImportProcessor):
             # If all we have is a single deleteall, skip this commit
             if len(interesting_filecmds) == 1 and isinstance(
                 interesting_filecmds[0], commands.FileDeleteAllCommand):
-                pass
+                self.keep = False
             else:
                 # Remember just the interesting file commands
                 self.keep = True
@@ -119,6 +120,7 @@ class FilterProcessor(processor.ImportProcessor):
                 cmd.merges = self._find_interesting_merges(cmd.merges)
         else:
             self.squashed_commits.add(cmd.id)
+            self.keep = False
 
         # Keep track of the parents
         if cmd.from_ and cmd.merges:
@@ -225,6 +227,8 @@ class FilterProcessor(processor.ImportProcessor):
     def _find_interesting_from(self, commit_ref):
         if commit_ref is None:
             return None
+        if type(commit_ref) != bytes:
+            raise TypeError
         return self._find_interesting_parent(commit_ref)
 
     def _find_interesting_merges(self, commit_refs):
@@ -232,6 +236,8 @@ class FilterProcessor(processor.ImportProcessor):
             return None
         merges = []
         for commit_ref in commit_refs:
+            if type(commit_ref) != bytes:
+                raise TypeError
             parent = self._find_interesting_parent(commit_ref)
             if parent is not None:
                 merges.append(parent)
