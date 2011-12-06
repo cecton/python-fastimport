@@ -16,33 +16,11 @@
 """Miscellaneous useful stuff."""
 
 
-def single_plural(n, single, plural):
-    """Return a single or plural form of a noun based on number."""
-    if n == 1:
-        return single
-    else:
-        return plural
-
-
-def defines_to_dict(defines):
-    """Convert a list of definition strings to a dictionary."""
-    if defines is None:
-        return None
-    result = {}
-    for define in defines:
-        kv = define.split('=', 1)
-        if len(kv) == 1:
-            result[define.strip()] = 1
-        else:
-            result[kv[0].strip()] = kv[1].strip()
-    return result
-
-
 def invert_dict(d):
     """Invert a dictionary with keys matching each value turned into a list."""
     # Based on recipe from ASPN
     result = {}
-    for k, v in d.iteritems():
+    for k, v in d.items():
         keys = result.setdefault(v, [])
         keys.append(k)
     return result
@@ -52,7 +30,7 @@ def invert_dictset(d):
     """Invert a dictionary with keys matching a set of values, turned into lists."""
     # Based on recipe from ASPN
     result = {}
-    for k, c in d.iteritems():
+    for k, c in d.items():
         for v in c:
             keys = result.setdefault(v, [])
             keys.append(k)
@@ -63,13 +41,13 @@ def _common_path_and_rest(l1, l2, common=[]):
     # From http://code.activestate.com/recipes/208993/
     if len(l1) < 1: return (common, l1, l2)
     if len(l2) < 1: return (common, l1, l2)
-    if l1[0] != l2[0]: return (common, l1, l2)
-    return _common_path_and_rest(l1[1:], l2[1:], common+[l1[0]])
+    if l1[:1] != l2[:1]: return (common, l1, l2)
+    return _common_path_and_rest(l1[1:], l2[1:], common+[l1[:1]])
 
 
 def common_path(path1, path2):
     """Find the common bit of 2 paths."""
-    return ''.join(_common_path_and_rest(path1, path2)[0])
+    return b''.join(_common_path_and_rest(path1, path2)[0])
 
 
 def binary_stream(stream):
@@ -100,14 +78,14 @@ def common_directory(paths):
     """
     import posixpath
     def get_dir_with_slash(path):
-        if path == '' or path.endswith('/'):
+        if path == b'' or path.endswith(b'/'):
             return path
         else:
             dirname, basename = posixpath.split(path)
-            if dirname == '':
+            if dirname == b'':
                 return dirname
             else:
-                return dirname + '/'
+                return dirname + b'/'
 
     if not paths:
         return None
@@ -135,11 +113,11 @@ def is_inside(dir, fname):
     if dir == fname:
         return True
 
-    if dir == '':
+    if dir == b'':
         return True
 
-    if dir[-1] != '/':
-        dir += '/'
+    if not dir.endswith(b'/'):
+        dir += b'/'
 
     return fname.startswith(dir)
 

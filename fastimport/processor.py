@@ -22,7 +22,7 @@ for basing real processors on. See the processors package for examples.
 import sys
 import time
 
-import errors
+from . import errors
 
 
 class ImportProcessor(object):
@@ -67,7 +67,7 @@ class ImportProcessor(object):
         self.pre_process()
         for cmd in command_iter():
             try:
-                handler = self.__class__.__dict__[cmd.name + "_handler"]
+                handler = self.__class__.__dict__[cmd.name.decode('ascii') + "_handler"]
             except KeyError:
                 raise errors.MissingHandler(cmd.name)
             else:
@@ -138,7 +138,7 @@ class ImportProcessor(object):
 
 class CommitHandler(object):
     """Base class for commit handling.
-    
+
     Subclasses should override the pre_*, post_* and *_handler
     methods as appropriate.
     """
@@ -150,7 +150,7 @@ class CommitHandler(object):
         self.pre_process_files()
         for fc in self.command.iter_files():
             try:
-                handler = self.__class__.__dict__[fc.name[4:] + "_handler"]
+                handler = self.__class__.__dict__[fc.name[4:].decode('ascii') + "_handler"]
             except KeyError:
                 raise errors.MissingHandler(fc.name)
             else:

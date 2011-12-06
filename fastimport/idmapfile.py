@@ -29,7 +29,7 @@ def save_id_map(filename, revision_ids):
     """
     f = open(filename, 'wb')
     try:
-        for commit_id, rev_id in revision_ids.iteritems():
+        for commit_id, rev_id in revision_ids.items():
             f.write("%s %s\n" % (commit_id, rev_id))
         f.flush()
     finally:

@@ -33,7 +33,7 @@ def parse_raw(s, lineno=0):
     The format must be exactly "seconds-since-epoch offset-utc".
     See the spec for details.
     """
-    timestamp_str, timezone_str = s.split(' ', 1)
+    timestamp_str, timezone_str = s.split(b' ', 1)
     timestamp = float(timestamp_str)
     timezone = _parse_tz(timezone_str, lineno)
     return timestamp, timezone
@@ -47,7 +47,7 @@ def _parse_tz(tz, lineno):
     # from git_repository.py in bzr-git
     if len(tz) != 5:
         raise errors.InvalidTimezone(lineno, tz)
-    sign = {'+': +1, '-': -1}[tz[0]]
+    sign = {b'+': +1, b'-': -1}[tz[:1]]
     hours = int(tz[1:3])
     minutes = int(tz[3:])
     return sign * 60 * (60 * hours + minutes)

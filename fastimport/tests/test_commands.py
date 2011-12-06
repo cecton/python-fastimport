@@ -15,7 +15,7 @@
 
 """Test how Commands are displayed"""
 
-from testtools import TestCase
+from unittest import TestCase
 
 from fastimport import (
     commands,
@@ -25,316 +25,316 @@ from fastimport import (
 class TestBlobDisplay(TestCase):
 
     def test_blob(self):
-        c = commands.BlobCommand("1", "hello world")
-        self.assertEqual("blob\nmark :1\ndata 11\nhello world", repr(c))
+        c = commands.BlobCommand(b"1", b"hello world")
+        self.assertEqual(b"blob\nmark :1\ndata 11\nhello world", bytes(c))
 
     def test_blob_no_mark(self):
-        c = commands.BlobCommand(None, "hello world")
-        self.assertEqual("blob\ndata 11\nhello world", repr(c))
+        c = commands.BlobCommand(None, b"hello world")
+        self.assertEqual(b"blob\ndata 11\nhello world", bytes(c))
 
 
 class TestCheckpointDisplay(TestCase):
 
     def test_checkpoint(self):
         c = commands.CheckpointCommand()
-        self.assertEqual("checkpoint", repr(c))
+        self.assertEqual(b"checkpoint", bytes(c))
 
 
 class TestCommitDisplay(TestCase):
 
     def test_commit(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "bbb", None, committer,
-            "release v1.0", ":aaa", None, None)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", None, committer,
+            b"release v1.0", b":aaa", None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
+            bytes(c))
 
     def test_commit_unicode_committer(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        name = u'\u013d\xf3r\xe9m \xcdp\u0161\xfam'
+        name = '\u013d\xf3r\xe9m \xcdp\u0161\xfam'
         name_utf8 = name.encode('utf8')
-        committer = (name, 'test@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "bbb", None, committer,
-            "release v1.0", ":aaa", None, None)
+        committer = (name_utf8, b'test@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", None, committer,
+            b"release v1.0", b":aaa", None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "committer %s <test@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa" % (name_utf8,),
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"committer " + name_utf8 + b" <test@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
+            bytes(c))
 
     def test_commit_no_mark(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", None, None, committer,
-            "release v1.0", ":aaa", None, None)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", None, None, committer,
+            b"release v1.0", b":aaa", None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
+            bytes(c))
 
     def test_commit_no_from(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "bbb", None, committer,
-            "release v1.0", None, None, None)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", None, committer,
+            b"release v1.0", None, None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0",
+            bytes(c))
 
     def test_commit_with_author(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        author = ('Sue Wong', 'sue@example.com', 1234565432, -6 * 3600)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "bbb", author,
-            committer, "release v1.0", ":aaa", None, None)
+        author = (b'Sue Wong', b'sue@example.com', 1234565432, -6 * 3600)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", author,
+            committer, b"release v1.0", b":aaa", None, None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "author Sue Wong <sue@example.com> 1234565432 -0600\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"author Sue Wong <sue@example.com> 1234565432 -0600\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
+            bytes(c))
 
     def test_commit_with_merges(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "ddd", None, committer,
-                "release v1.0", ":aaa", [':bbb', ':ccc'], None)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"ddd", None, committer,
+                b"release v1.0", b":aaa", [b':bbb', b':ccc'], None)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :ddd\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa\n"
-            "merge :bbb\n"
-            "merge :ccc",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :ddd\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa\n"
+            b"merge :bbb\n"
+            b"merge :ccc",
+            bytes(c))
 
     def test_commit_with_filecommands(self):
         file_cmds = iter([
-            commands.FileDeleteCommand('readme.txt'),
-            commands.FileModifyCommand('NEWS', 0100644, None,
-                'blah blah blah'),
+            commands.FileDeleteCommand(b'readme.txt'),
+            commands.FileModifyCommand(b'NEWS', 0o100644, None,
+                b'blah blah blah'),
             ])
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.CommitCommand("refs/heads/master", "bbb", None, committer,
-            "release v1.0", ":aaa", None, file_cmds)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", None, committer,
+            b"release v1.0", b":aaa", None, file_cmds)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa\n"
-            "D readme.txt\n"
-            "M 644 inline NEWS\n"
-            "data 14\n"
-            "blah blah blah",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa\n"
+            b"D readme.txt\n"
+            b"M 644 inline NEWS\n"
+            b"data 14\n"
+            b"blah blah blah",
+            bytes(c))
 
     def test_commit_with_more_authors(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        author = ('Sue Wong', 'sue@example.com', 1234565432, -6 * 3600)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
+        author = (b'Sue Wong', b'sue@example.com', 1234565432, -6 * 3600)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
         more_authors = [
-            ('Al Smith', 'al@example.com', 1234565432, -6 * 3600),
-            ('Bill Jones', 'bill@example.com', 1234565432, -6 * 3600),
+            (b'Al Smith', b'al@example.com', 1234565432, -6 * 3600),
+            (b'Bill Jones', b'bill@example.com', 1234565432, -6 * 3600),
             ]
-        c = commands.CommitCommand("refs/heads/master", "bbb", author,
-            committer, "release v1.0", ":aaa", None, None,
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", author,
+            committer, b"release v1.0", b":aaa", None, None,
             more_authors=more_authors)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "author Sue Wong <sue@example.com> 1234565432 -0600\n"
-            "author Al Smith <al@example.com> 1234565432 -0600\n"
-            "author Bill Jones <bill@example.com> 1234565432 -0600\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"author Sue Wong <sue@example.com> 1234565432 -0600\n"
+            b"author Al Smith <al@example.com> 1234565432 -0600\n"
+            b"author Bill Jones <bill@example.com> 1234565432 -0600\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa",
+            bytes(c))
 
     def test_commit_with_properties(self):
         # user tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        committer = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
+        committer = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
         properties = {
-            u'greeting':  u'hello',
-            u'planet':    u'world',
+            'greeting':  'hello',
+            'planet':    'world',
             }
-        c = commands.CommitCommand("refs/heads/master", "bbb", None,
-            committer, "release v1.0", ":aaa", None, None,
+        c = commands.CommitCommand(b"refs/heads/master", b"bbb", None,
+            committer, b"release v1.0", b":aaa", None, None,
             properties=properties)
         self.assertEqual(
-            "commit refs/heads/master\n"
-            "mark :bbb\n"
-            "committer Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 12\n"
-            "release v1.0\n"
-            "from :aaa\n"
-            "property greeting 5 hello\n"
-            "property planet 5 world",
-            repr(c))
+            b"commit refs/heads/master\n"
+            b"mark :bbb\n"
+            b"committer Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 12\n"
+            b"release v1.0\n"
+            b"from :aaa\n"
+            b"property greeting 5 hello\n"
+            b"property planet 5 world",
+            bytes(c))
 
 
 class TestFeatureDisplay(TestCase):
 
     def test_feature(self):
         c = commands.FeatureCommand("dwim")
-        self.assertEqual("feature dwim", repr(c))
+        self.assertEqual(b"feature dwim", bytes(c))
 
     def test_feature_with_value(self):
         c = commands.FeatureCommand("dwim", "please")
-        self.assertEqual("feature dwim=please", repr(c))
+        self.assertEqual(b"feature dwim=please", bytes(c))
 
 
 class TestProgressDisplay(TestCase):
 
     def test_progress(self):
-        c = commands.ProgressCommand("doing foo")
-        self.assertEqual("progress doing foo", repr(c))
+        c = commands.ProgressCommand(b"doing foo")
+        self.assertEqual(b"progress doing foo", bytes(c))
 
 
 class TestResetDisplay(TestCase):
 
     def test_reset(self):
-        c = commands.ResetCommand("refs/tags/v1.0", ":xxx")
-        self.assertEqual("reset refs/tags/v1.0\nfrom :xxx\n", repr(c))
+        c = commands.ResetCommand(b"refs/tags/v1.0", b":xxx")
+        self.assertEqual(b"reset refs/tags/v1.0\nfrom :xxx\n", bytes(c))
 
     def test_reset_no_from(self):
-        c = commands.ResetCommand("refs/remotes/origin/master", None)
-        self.assertEqual("reset refs/remotes/origin/master", repr(c))
+        c = commands.ResetCommand(b"refs/remotes/origin/master", None)
+        self.assertEqual(b"reset refs/remotes/origin/master", bytes(c))
 
 
 class TestTagDisplay(TestCase):
 
     def test_tag(self):
         # tagger tuple is (name, email, secs-since-epoch, secs-offset-from-utc)
-        tagger = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.TagCommand("refs/tags/v1.0", ":xxx", tagger, "create v1.0")
+        tagger = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.TagCommand(b"refs/tags/v1.0", b":xxx", tagger, b"create v1.0")
         self.assertEqual(
-            "tag refs/tags/v1.0\n"
-            "from :xxx\n"
-            "tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 11\n"
-            "create v1.0",
-            repr(c))
+            b"tag refs/tags/v1.0\n"
+            b"from :xxx\n"
+            b"tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 11\n"
+            b"create v1.0",
+            bytes(c))
 
     def test_tag_no_from(self):
-        tagger = ('Joe Wong', 'joe@example.com', 1234567890, -6 * 3600)
-        c = commands.TagCommand("refs/tags/v1.0", None, tagger, "create v1.0")
+        tagger = (b'Joe Wong', b'joe@example.com', 1234567890, -6 * 3600)
+        c = commands.TagCommand(b"refs/tags/v1.0", None, tagger, b"create v1.0")
         self.assertEqual(
-            "tag refs/tags/v1.0\n"
-            "tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
-            "data 11\n"
-            "create v1.0",
-            repr(c))
+            b"tag refs/tags/v1.0\n"
+            b"tagger Joe Wong <joe@example.com> 1234567890 -0600\n"
+            b"data 11\n"
+            b"create v1.0",
+            bytes(c))
 
 
 class TestFileModifyDisplay(TestCase):
 
     def test_filemodify_file(self):
-        c = commands.FileModifyCommand("foo/bar", 0100644, ":23", None)
-        self.assertEqual("M 644 :23 foo/bar", repr(c))
+        c = commands.FileModifyCommand(b"foo/bar", 0o100644, b":23", None)
+        self.assertEqual(b"M 644 :23 foo/bar", bytes(c))
 
     def test_filemodify_file_executable(self):
-        c = commands.FileModifyCommand("foo/bar", 0100755, ":23", None)
-        self.assertEqual("M 755 :23 foo/bar", repr(c))
+        c = commands.FileModifyCommand(b"foo/bar", 0o100755, b":23", None)
+        self.assertEqual(b"M 755 :23 foo/bar", bytes(c))
 
     def test_filemodify_file_internal(self):
-        c = commands.FileModifyCommand("foo/bar", 0100644, None,
-            "hello world")
-        self.assertEqual("M 644 inline foo/bar\ndata 11\nhello world", repr(c))
+        c = commands.FileModifyCommand(b"foo/bar", 0o100644, None,
+            b"hello world")
+        self.assertEqual(b"M 644 inline foo/bar\ndata 11\nhello world", bytes(c))
 
     def test_filemodify_symlink(self):
-        c = commands.FileModifyCommand("foo/bar", 0120000, None, "baz")
-        self.assertEqual("M 120000 inline foo/bar\ndata 3\nbaz", repr(c))
+        c = commands.FileModifyCommand(b"foo/bar", 0o120000, None, b"baz")
+        self.assertEqual(b"M 120000 inline foo/bar\ndata 3\nbaz", bytes(c))
 
     def test_filemodify_treeref(self):
-        c = commands.FileModifyCommand("tree-info", 0160000,
-            "revision-id-info", None)
-        self.assertEqual("M 160000 revision-id-info tree-info", repr(c))
+        c = commands.FileModifyCommand(b"tree-info", 0o160000,
+            b"revision-id-info", None)
+        self.assertEqual(b"M 160000 revision-id-info tree-info", bytes(c))
 
 
 class TestFileDeleteDisplay(TestCase):
 
     def test_filedelete(self):
-        c = commands.FileDeleteCommand("foo/bar")
-        self.assertEqual("D foo/bar", repr(c))
+        c = commands.FileDeleteCommand(b"foo/bar")
+        self.assertEqual(b"D foo/bar", bytes(c))
 
 
 class TestFileCopyDisplay(TestCase):
 
     def test_filecopy(self):
-        c = commands.FileCopyCommand("foo/bar", "foo/baz")
-        self.assertEqual("C foo/bar foo/baz", repr(c))
+        c = commands.FileCopyCommand(b"foo/bar", b"foo/baz")
+        self.assertEqual(b"C foo/bar foo/baz", bytes(c))
 
     def test_filecopy_quoted(self):
         # Check the first path is quoted if it contains spaces
-        c = commands.FileCopyCommand("foo/b a r", "foo/b a z")
-        self.assertEqual('C "foo/b a r" foo/b a z', repr(c))
+        c = commands.FileCopyCommand(b"foo/b a r", b"foo/b a z")
+        self.assertEqual(b'C "foo/b a r" foo/b a z', bytes(c))
 
 
 class TestFileRenameDisplay(TestCase):
 
     def test_filerename(self):
-        c = commands.FileRenameCommand("foo/bar", "foo/baz")
-        self.assertEqual("R foo/bar foo/baz", repr(c))
+        c = commands.FileRenameCommand(b"foo/bar", b"foo/baz")
+        self.assertEqual(b"R foo/bar foo/baz", bytes(c))
 
     def test_filerename_quoted(self):
         # Check the first path is quoted if it contains spaces
-        c = commands.FileRenameCommand("foo/b a r", "foo/b a z")
-        self.assertEqual('R "foo/b a r" foo/b a z', repr(c))
+        c = commands.FileRenameCommand(b"foo/b a r", b"foo/b a z")
+        self.assertEqual(b'R "foo/b a r" foo/b a z', bytes(c))
 
 
 class TestFileDeleteAllDisplay(TestCase):
 
     def test_filedeleteall(self):
         c = commands.FileDeleteAllCommand()
-        self.assertEqual("deleteall", repr(c))
+        self.assertEqual(b"deleteall", bytes(c))
 
 
 class TestPathChecking(TestCase):
 
     def test_filemodify_path_checking(self):
-        self.assertRaises(ValueError, commands.FileModifyCommand, "",
-            0100644, None, "text")
+        self.assertRaises(ValueError, commands.FileModifyCommand, b"",
+            0o100644, None, b"text")
         self.assertRaises(ValueError, commands.FileModifyCommand, None,
-            0100644, None, "text")
+            0o100644, None, b"text")
 
     def test_filedelete_path_checking(self):
-        self.assertRaises(ValueError, commands.FileDeleteCommand, "")
+        self.assertRaises(ValueError, commands.FileDeleteCommand, b"")
         self.assertRaises(ValueError, commands.FileDeleteCommand, None)
 
     def test_filerename_path_checking(self):
-        self.assertRaises(ValueError, commands.FileRenameCommand, "", "foo")
-        self.assertRaises(ValueError, commands.FileRenameCommand, None, "foo")
-        self.assertRaises(ValueError, commands.FileRenameCommand, "foo", "")
-        self.assertRaises(ValueError, commands.FileRenameCommand, "foo", None)
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"", b"foo")
+        self.assertRaises(ValueError, commands.FileRenameCommand, None, b"foo")
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"foo", b"")
+        self.assertRaises(ValueError, commands.FileRenameCommand, b"foo", None)
 
     def test_filecopy_path_checking(self):
-        self.assertRaises(ValueError, commands.FileCopyCommand, "", "foo")
-        self.assertRaises(ValueError, commands.FileCopyCommand, None, "foo")
-        self.assertRaises(ValueError, commands.FileCopyCommand, "foo", "")
-        self.assertRaises(ValueError, commands.FileCopyCommand, "foo", None)
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"", b"foo")
+        self.assertRaises(ValueError, commands.FileCopyCommand, None, b"foo")
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"foo", b"")
+        self.assertRaises(ValueError, commands.FileCopyCommand, b"foo", None)

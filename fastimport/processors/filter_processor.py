@@ -50,6 +50,7 @@ class FilterProcessor(processor.ImportProcessor):
     def pre_process(self):
         self.includes = self.params.get('include_paths')
         self.excludes = self.params.get('exclude_paths')
+
         self.squash_empty_commits = bool(
             self.params.get('squash_empty_commits', True))
         # What's the new root, if any
@@ -101,7 +102,7 @@ class FilterProcessor(processor.ImportProcessor):
             # If all we have is a single deleteall, skip this commit
             if len(interesting_filecmds) == 1 and isinstance(
                 interesting_filecmds[0], commands.FileDeleteAllCommand):
-                pass
+                self.keep = False
             else:
                 # Remember just the interesting file commands
                 self.keep = True
@@ -119,6 +120,7 @@ class FilterProcessor(processor.ImportProcessor):
                 cmd.merges = self._find_interesting_merges(cmd.merges)
         else:
             self.squashed_commits.add(cmd.id)
+            self.keep = False
 
         # Keep track of the parents
         if cmd.from_ and cmd.merges:
@@ -128,7 +130,7 @@ class FilterProcessor(processor.ImportProcessor):
         else:
             parents = None
         if cmd.mark is not None:
-            self.parents[":" + cmd.mark] = parents
+            self.parents[b":" + cmd.mark] = parents
 
     def reset_handler(self, cmd):
         """Process a ResetCommand."""
@@ -158,14 +160,14 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _print_command(self, cmd):
         """Wrapper to avoid adding unnecessary blank lines."""
-        text = repr(cmd)
+        text = bytes(cmd)
         self.outf.write(text)
-        if not text.endswith("\n"):
-            self.outf.write("\n")
+        if not text.endswith(b"\n"):
+            self.outf.write(b"\n")
 
     def _filter_filecommands(self, filecmd_iter):
         """Return the filecommands filtered by includes & excludes.
-        
+
         :return: a list of FileCommand objects
         """
         if self.includes is None and self.excludes is None:
@@ -225,6 +227,8 @@ class FilterProcessor(processor.ImportProcessor):
     def _find_interesting_from(self, commit_ref):
         if commit_ref is None:
             return None
+        if type(commit_ref) != bytes:
+            raise TypeError
         return self._find_interesting_parent(commit_ref)
 
     def _find_interesting_merges(self, commit_refs):
@@ -232,6 +236,8 @@ class FilterProcessor(processor.ImportProcessor):
             return None
         merges = []
         for commit_ref in commit_refs:
+            if type(commit_ref) != bytes:
+                raise TypeError
             parent = self._find_interesting_parent(commit_ref)
             if parent is not None:
                 merges.append(parent)
@@ -242,7 +248,7 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _convert_rename(self, fc):
         """Convert a FileRenameCommand into a new FileCommand.
-        
+
         :return: None if the rename is being ignored, otherwise a
           new FileCommand based on the whether the old and new paths
           are inside or outside of the interesting locations.
@@ -273,7 +279,7 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _convert_copy(self, fc):
         """Convert a FileCopyCommand into a new FileCommand.
-        
+
         :return: None if the copy is being ignored, otherwise a
           new FileCommand based on the whether the source and destination
           paths are inside or outside of the interesting locations.

@@ -15,14 +15,14 @@
 
 """Test tracking of heads"""
 
-from cStringIO import StringIO
+from io import BytesIO
 
 from fastimport import (
     commands,
     parser,
     )
 
-import testtools
+import unittest
 
 from fastimport.reftracker import (
     RefTracker,
@@ -31,7 +31,7 @@ from fastimport.reftracker import (
 
 # A sample input stream that only adds files to a branch
 _SAMPLE_MAINLINE = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -77,7 +77,7 @@ M 644 :4 doc/index.txt
 
 # A sample input stream that adds files to two branches
 _SAMPLE_TWO_HEADS = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -123,7 +123,7 @@ M 644 :4 doc/index.txt
 
 # A sample input stream that adds files to two branches
 _SAMPLE_TWO_BRANCHES_MERGED = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -178,7 +178,7 @@ D doc/index.txt
 
 # A sample input stream that contains a reset
 _SAMPLE_RESET = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -194,7 +194,7 @@ from :100
 
 # A sample input stream that contains a reset and more commits
 _SAMPLE_RESET_WITH_MORE_COMMITS = \
-"""blob
+b"""blob
 mark :1
 data 9
 Welcome!
@@ -216,10 +216,10 @@ from :100
 D doc/README.txt
 """
 
-class TestHeadTracking(testtools.TestCase):
+class TestHeadTracking(unittest.TestCase):
 
     def assertHeads(self, input, expected):
-        s = StringIO(input)
+        s = BytesIO(input)
         p = parser.ImportParser(s)
         reftracker = RefTracker()
         for cmd in p.iter_commands():
@@ -234,26 +234,26 @@ class TestHeadTracking(testtools.TestCase):
 
     def test_mainline(self):
         self.assertHeads(_SAMPLE_MAINLINE, {
-            ':102': set(['refs/heads/master']),
+            b':102': set([b'refs/heads/master']),
             })
 
     def test_two_heads(self):
         self.assertHeads(_SAMPLE_TWO_HEADS, {
-            ':101': set(['refs/heads/mybranch']),
-            ':102': set(['refs/heads/master']),
+            b':101': set([b'refs/heads/mybranch']),
+            b':102': set([b'refs/heads/master']),
             })
 
     def test_two_branches_merged(self):
         self.assertHeads(_SAMPLE_TWO_BRANCHES_MERGED, {
-            ':103': set(['refs/heads/master']),
+            b':103': set([b'refs/heads/master']),
             })
 
     def test_reset(self):
         self.assertHeads(_SAMPLE_RESET, {
-            ':100': set(['refs/heads/master', 'refs/remotes/origin/master']),
+            b':100': set([b'refs/heads/master', b'refs/remotes/origin/master']),
             })
 
     def test_reset_with_more_commits(self):
         self.assertHeads(_SAMPLE_RESET_WITH_MORE_COMMITS, {
-            ':101': set(['refs/remotes/origin/master']),
+            b':101': set([b'refs/remotes/origin/master']),
             })

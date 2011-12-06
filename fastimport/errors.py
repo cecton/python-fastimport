@@ -18,78 +18,19 @@
 # Prefix to messages to show location information
 _LOCATION_FMT = "line %(lineno)d: "
 
-# ImportError is heavily based on BzrError
-
-class ImportError(StandardError):
-    """The base exception class for all import processing exceptions."""
-
-    _fmt = "Unknown Import Error"
-
-    def __init__(self, msg=None, **kwds):
-        StandardError.__init__(self)
-        if msg is not None:
-            self._preformatted_string = msg
-        else:
-            self._preformatted_string = None
-            for key, value in kwds.items():
-                setattr(self, key, value)
-
-    def _format(self):
-        s = getattr(self, '_preformatted_string', None)
-        if s is not None:
-            # contains a preformatted message
-            return s
-        try:
-            fmt = self._fmt
-            if fmt:
-                d = dict(self.__dict__)
-                s = fmt % d
-                # __str__() should always return a 'str' object
-                # never a 'unicode' object.
-                return s
-        except (AttributeError, TypeError, NameError, ValueError, KeyError), e:
-            return 'Unprintable exception %s: dict=%r, fmt=%r, error=%r' \
-                % (self.__class__.__name__,
-                   self.__dict__,
-                   getattr(self, '_fmt', None),
-                   e)
-
-    def __unicode__(self):
-        u = self._format()
-        if isinstance(u, str):
-            # Try decoding the str using the default encoding.
-            u = unicode(u)
-        elif not isinstance(u, unicode):
-            # Try to make a unicode object from it, because __unicode__ must
-            # return a unicode object.
-            u = unicode(u)
-        return u
+class FastImportError(Exception):
 
     def __str__(self):
-        s = self._format()
-        if isinstance(s, unicode):
-            s = s.encode('utf8')
-        else:
-            # __str__ must return a str.
-            s = str(s)
-        return s
-
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, str(self))
-
-    def __eq__(self, other):
-        if self.__class__ is not other.__class__:
-            return NotImplemented
-        return self.__dict__ == other.__dict__
+        return self._fmt % self.__dict__
 
 
-class ParsingError(ImportError):
+class ParsingError(FastImportError):
     """The base exception class for all import processing exceptions."""
 
     _fmt = _LOCATION_FMT + "Unknown Import Parsing Error"
 
     def __init__(self, lineno):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.lineno = lineno
 
 
@@ -123,7 +64,7 @@ class InvalidCommand(ParsingError):
 
     def __init__(self, lineno, cmd):
         ParsingError.__init__(self, lineno)
-        self.cmd = cmd
+        self.cmd = cmd.decode('ascii', 'replace')
 
 
 class MissingSection(ParsingError):
@@ -165,66 +106,66 @@ class InvalidTimezone(ParsingError):
             self.reason = ''
 
 
-class UnknownDateFormat(ImportError):
+class UnknownDateFormat(FastImportError):
     """Raised when an unknown date format is given."""
 
     _fmt = ("Unknown date format '%(format)s'")
 
     def __init__(self, format):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.format = format
 
 
-class MissingHandler(ImportError):
+class MissingHandler(FastImportError):
     """Raised when a processor can't handle a command."""
 
     _fmt = ("Missing handler for command %(cmd)s")
 
     def __init__(self, cmd):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.cmd = cmd
 
 
-class UnknownParameter(ImportError):
+class UnknownParameter(FastImportError):
     """Raised when an unknown parameter is passed to a processor."""
 
     _fmt = ("Unknown parameter - '%(param)s' not in %(knowns)s")
 
     def __init__(self, param, knowns):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.param = param
         self.knowns = knowns
 
 
-class BadRepositorySize(ImportError):
+class BadRepositorySize(FastImportError):
     """Raised when the repository has an incorrect number of revisions."""
 
     _fmt = ("Bad repository size - %(found)d revisions found, "
         "%(expected)d expected")
 
     def __init__(self, expected, found):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.expected = expected
         self.found = found
 
 
-class BadRestart(ImportError):
+class BadRestart(FastImportError):
     """Raised when the import stream and id-map do not match up."""
 
     _fmt = ("Bad restart - attempted to skip commit %(commit_id)s "
         "but matching revision-id is unknown")
 
     def __init__(self, commit_id):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.commit_id = commit_id
 
 
-class UnknownFeature(ImportError):
+class UnknownFeature(FastImportError):
     """Raised when an unknown feature is given in the input stream."""
 
     _fmt = ("Unknown feature '%(feature)s' - try a later importer or "
         "an earlier data format")
 
     def __init__(self, feature):
-        ImportError.__init__(self)
+        FastImportError.__init__(self)
         self.feature = feature
