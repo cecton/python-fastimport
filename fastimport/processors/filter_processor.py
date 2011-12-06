@@ -165,7 +165,7 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _filter_filecommands(self, filecmd_iter):
         """Return the filecommands filtered by includes & excludes.
-        
+
         :return: a list of FileCommand objects
         """
         if self.includes is None and self.excludes is None:
@@ -242,7 +242,7 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _convert_rename(self, fc):
         """Convert a FileRenameCommand into a new FileCommand.
-        
+
         :return: None if the rename is being ignored, otherwise a
           new FileCommand based on the whether the old and new paths
           are inside or outside of the interesting locations.
@@ -273,7 +273,7 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _convert_copy(self, fc):
         """Convert a FileCopyCommand into a new FileCommand.
-        
+
         :return: None if the copy is being ignored, otherwise a
           new FileCommand based on the whether the source and destination
           paths are inside or outside of the interesting locations.

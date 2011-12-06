@@ -243,7 +243,7 @@ class LineBasedParser(object):
                 break
             else:
                 lines.append(line)
-        return ''.join(lines)
+        return b''.join(lines)
 
 
 # Regular expression used for parsing. (Note: The spec states that the name
@@ -398,9 +398,9 @@ class ImportParser(LineBasedParser):
         params = info.split(b' ', 2)
         path = self._path(params[2])
         mode = self._mode(params[0])
-        if params[1] == 'inline':
+        if params[1] == b'inline':
             dataref = None
-            data = self._get_data('filemodify')
+            data = self._get_data(b'filemodify')
         else:
             dataref = params[1]
             data = None
@@ -414,9 +414,9 @@ class ImportParser(LineBasedParser):
 
     def _parse_tag(self, name):
         """Parse a tag command."""
-        from_ = self._get_from('tag')
-        tagger = self._get_user_info('tag', b'tagger', accept_just_who=True)
-        message = self._get_data('tag', b'message')
+        from_ = self._get_from(b'tag')
+        tagger = self._get_user_info(b'tag', b'tagger', accept_just_who=True)
+        message = self._get_data(b'tag', b'message')
         return commands.TagCommand(name, from_, tagger, message)
 
     def _get_mark_if_any(self):
@@ -436,7 +436,7 @@ class ImportParser(LineBasedParser):
         elif line.startswith(b'from '):
             return line[len(b'from '):]
         elif required_for:
-            self.abort(errors.MissingSection, required_for, 'from')
+            self.abort(errors.MissingSection, required_for, b'from')
         else:
             self.push_line(line)
             return None
@@ -476,7 +476,7 @@ class ImportParser(LineBasedParser):
             self.push_line(line)
             return None
 
-    def _get_data(self, required_for, section='data'):
+    def _get_data(self, required_for, section=b'data'):
         """Parse a data section."""
         line = self.next_line()
         if line.startswith(b'data '):
@@ -541,7 +541,7 @@ class ImportParser(LineBasedParser):
     def _name_value(self, s):
         """Parse a (name,value) tuple from 'name value-length value'."""
         parts = s.split(b' ', 2)
-        name = parts[0]
+        name = parts[0].decode('utf8')
         if len(parts) == 1:
             value = None
         else:
@@ -557,7 +557,7 @@ class ImportParser(LineBasedParser):
     def _path(self, s):
         """Parse a path."""
         if s.startswith(b'"'):
-            if s[-1] != b'"':
+            if not s.endswith(b'"'):
                 self.abort(errors.BadFormat, '?', '?', s)
             else:
                 return _unquote_c_string(s[1:-1])
@@ -595,7 +595,7 @@ class ImportParser(LineBasedParser):
         elif s in [b'160000', b'0160000']:
             return 0o160000
         else:
-            self.abort(errors.BadFormat, 'filemodify', 'mode', s)
+            self.abort(errors.BadFormat, b'filemodify', b'mode', s)
 
 
 def _unquote_c_string(s):

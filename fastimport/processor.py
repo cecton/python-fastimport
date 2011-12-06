@@ -138,7 +138,7 @@ class ImportProcessor(object):
 
 class CommitHandler(object):
     """Base class for commit handling.
-    
+
     Subclasses should override the pre_*, post_* and *_handler
     methods as appropriate.
     """

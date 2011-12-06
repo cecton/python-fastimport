@@ -138,7 +138,7 @@ class CommitCommand(ImportCommand):
         if mark is None:
             self.id = ('@%d' % lineno).encode('ascii')
         else:
-            self.id = (':%s' % mark).encode('ascii')
+            self.id = b':' + mark
 
     def __repr__(self):
         return self.to_bytes(include_file_contents=str).decode('utf-8', 'replace')
@@ -291,7 +291,7 @@ class FileModifyCommand(FileCommand):
 
     def __init__(self, path, mode, dataref, data):
         # Either dataref or data should be null
-        FileCommand.__init__(self, 'filemodify')
+        FileCommand.__init__(self, b'filemodify')
         self.path = check_path(path)
         self.mode = mode
         self.dataref = dataref
@@ -336,7 +336,7 @@ class FileModifyCommand(FileCommand):
 class FileDeleteCommand(FileCommand):
 
     def __init__(self, path):
-        FileCommand.__init__(self, 'filedelete')
+        FileCommand.__init__(self, b'filedelete')
         self.path = check_path(path)
 
     def __bytes__(self):
@@ -346,7 +346,7 @@ class FileDeleteCommand(FileCommand):
 class FileCopyCommand(FileCommand):
 
     def __init__(self, src_path, dest_path):
-        FileCommand.__init__(self, 'filecopy')
+        FileCommand.__init__(self, b'filecopy')
         self.src_path = check_path(src_path)
         self.dest_path = check_path(dest_path)
 
@@ -359,7 +359,7 @@ class FileCopyCommand(FileCommand):
 class FileRenameCommand(FileCommand):
 
     def __init__(self, old_path, new_path):
-        FileCommand.__init__(self, 'filerename')
+        FileCommand.__init__(self, b'filerename')
         self.old_path = check_path(old_path)
         self.new_path = check_path(new_path)
 
@@ -372,7 +372,7 @@ class FileRenameCommand(FileCommand):
 class FileDeleteAllCommand(FileCommand):
 
     def __init__(self):
-        FileCommand.__init__(self, 'filedeleteall')
+        FileCommand.__init__(self, b'filedeleteall')
 
     def __bytes__(self):
         return b"deleteall"
