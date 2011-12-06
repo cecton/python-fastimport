@@ -10,5 +10,9 @@ setup(name="fastimport",
       author_email="bazaar@lists.canonical.com",
       license="GNU GPL v2 or later",
       url="https://launchpad.net/python-fastimport",
-      download_url='http://launchpad.net/python-fastimport/trunk/%s/+download/python-fastimport-%s.tar.gz' % (version, version),
-      packages=['fastimport', 'fastimport.tests', 'fastimport.processors'])
+      download_url='http://launchpad.net/python-fastimport/py3k/%s/+download/fastimport-%s.tar.gz' % (version, version),
+      packages=['fastimport', 'fastimport.tests', 'fastimport.processors'],
+      classifiers=[
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3'],
+      )
