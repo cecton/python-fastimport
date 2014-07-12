@@ -22,38 +22,28 @@ from fastimport import (
     processor,
     )
 import stat
+import re
+import fnmatch
 
 
-class FilterProcessor(processor.ImportProcessor):
+class BaseFilterProcessor(processor.ImportProcessor):
     """An import processor that filters the input to include/exclude objects.
 
     No changes to the current repository are made.
 
     Here are the supported parameters:
 
-    * include_paths - a list of paths that commits must change in order to
-      be kept in the output stream
-
-    * exclude_paths - a list of paths that should not appear in the output
-      stream
-
     * squash_empty_commits - if set to False, squash commits that don't have
       any changes after the filter has been applied
     """
 
     known_params = [
-        'include_paths',
-        'exclude_paths',
         'squash_empty_commits'
         ]
 
     def pre_process(self):
-        self.includes = self.params.get('include_paths')
-        self.excludes = self.params.get('exclude_paths')
         self.squash_empty_commits = bool(
             self.params.get('squash_empty_commits', True))
-        # What's the new root, if any
-        self.new_root = helpers.common_directory(self.includes)
         # Buffer of blobs until we know we need them: mark -> cmd
         self.blobs = {}
         # These are the commits we've squashed so far
@@ -168,9 +158,6 @@ class FilterProcessor(processor.ImportProcessor):
         
         :return: a list of FileCommand objects
         """
-        if self.includes is None and self.excludes is None:
-            return list(filecmd_iter())
-
         # Do the filtering, adjusting for the new_root
         result = []
         for fc in filecmd_iter():
@@ -196,17 +183,11 @@ class FilterProcessor(processor.ImportProcessor):
 
     def _path_to_be_kept(self, path):
         """Does the given path pass the filtering criteria?"""
-        if self.excludes and (path in self.excludes
-                or helpers.is_inside_any(self.excludes, path)):
-            return False
-        if self.includes:
-            return (path in self.includes
-                or helpers.is_inside_any(self.includes, path))
-        return True
+        raise NotImplementedError()
 
     def _adjust_for_new_root(self, path):
         """Adjust a path given the new root directory of the output."""
-        if self.new_root is None:
+        if getattr(self, 'new_root', None) is None:
             return path
         elif path.startswith(self.new_root):
             return path[len(self.new_root):]
@@ -300,3 +281,41 @@ class FilterProcessor(processor.ImportProcessor):
             self.warning("cannot turn copy of %s into an add of %s yet" %
                 (src, dest))
         return None
+
+
+class FilterProcessor(BaseFilterProcessor):
+    known_params = [
+        'include_patterns',
+        'exclude_patterns',
+        'squash_empty_commits'
+        ]
+
+    def _paths_to_regex(self, paths):
+        return "|".join(map(fnmatch.translate, paths))
+
+    def pre_process(self):
+        # compile regex for every pattern or use the regex object directly
+        if isinstance(self.params.get('include_patterns'), basestring):
+            include_patterns = self.params['include_patterns'].split(",")
+            self.includes = re.compile(
+                self._paths_to_regex(include_patterns))
+            # truncate the includes until the '*' and find the common directory
+            self.new_root = helpers.common_directory(
+                [(x[:i] if i > -1 else x)
+                 for i, x in ((x.find('*'), x) for x in include_patterns)])
+            print 'M ', self.new_root
+        else:
+            self.includes = self.params.get('include_patterns')
+        # compile exclude patterns
+        if isinstance(self.params.get('exclude_patterns'), basestring):
+            self.excludes = re.compile(
+                self._paths_to_regex(
+                    self.params['exclude_patterns'].split(",")))
+        else:
+            self.excludes = self.params.get('exclude_patterns')
+        super(FilterProcessor, self).pre_process()
+
+    def _path_to_be_kept(self, path):
+        # keep unless path is in excludes or not in includes
+        return not ((self.excludes and self.excludes.match(path)) or
+                    (self.includes and not self.includes.match(path)))
